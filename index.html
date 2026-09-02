@@ -1,0 +1,1271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="referrer" content="no-referrer" />
+  <title>Business Empire: Sovereign Fleet Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --surface-1: rgba(17, 24, 39, 0.88);
+      --surface-2: rgba(31, 41, 55, 0.95);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(245, 158, 11, 0.45);
+      --gold: #f59e0b;
+      --gold-gradient: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      --emerald: #10b981;
+      --purple: #a855f7;
+      --pink: #ec4899;
+      --rose: #ef4444;
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+      --text-light: #e5e7eb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.12) 0px, transparent 45%),
+        radial-gradient(at 100% 100%, rgba(236, 72, 153, 0.1) 0px, transparent 45%),
+        radial-gradient(at 50% 50%, rgba(16, 185, 129, 0.05) 0px, transparent 65%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .app-frame {
+      width: 100%;
+      max-width: 480px;
+      min-height: 100vh;
+      background: rgba(8, 12, 22, 0.96);
+      backdrop-filter: blur(30px);
+      border-left: 1px solid var(--border);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 60px rgba(0,0,0,0.9);
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120px);
+      background: linear-gradient(135deg, rgba(31, 41, 55, 0.98), rgba(17, 24, 39, 0.98));
+      border: 1px solid var(--gold);
+      padding: 10px 20px;
+      border-radius: 30px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--gold);
+      box-shadow: 0 10px 30px rgba(245, 158, 11, 0.3);
+      z-index: 100;
+      transition: transform 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Modal Viewer */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(10px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal-card {
+      background: var(--surface-2);
+      border: 1px solid var(--border-glow);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 400px;
+      overflow: hidden;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+    }
+
+    .modal-img {
+      width: 100%;
+      height: 220px;
+      object-fit: cover;
+      background: #0f172a;
+    }
+
+    .modal-body { padding: 18px; }
+    .modal-title { font-size: 1.1rem; font-weight: 800; color: #fff; margin-bottom: 4px; }
+    .modal-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 14px; }
+
+    .modal-specs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .spec-box {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .spec-label { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; }
+    .spec-value { font-size: 0.85rem; font-weight: 700; color: var(--gold); }
+
+    .btn-close {
+      width: 100%;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    /* Top Sticky Header */
+    .header {
+      padding: 16px 20px 12px;
+      background: linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(8, 12, 22, 0.92) 100%);
+      border-bottom: 1px solid var(--border);
+      text-align: center;
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      backdrop-filter: blur(20px);
+    }
+
+    .level-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--gold);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .networth-title {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 600;
+    }
+
+    .balance-value {
+      font-size: 2.1rem;
+      font-weight: 800;
+      color: var(--text-main);
+      margin: 2px 0 4px;
+      background: linear-gradient(180deg, #ffffff 40%, #e2e8f0 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .income-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--emerald);
+      background: rgba(16, 185, 129, 0.12);
+      padding: 3px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .buff-pill {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--pink);
+      background: rgba(236, 72, 153, 0.15);
+      padding: 3px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(236, 72, 153, 0.4);
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      padding-bottom: 100px;
+    }
+
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Tap Zone */
+    .tap-zone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 0 10px;
+      position: relative;
+    }
+
+    .tap-orb {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #1e293b, #0f172a);
+      border: 2px solid rgba(245, 158, 11, 0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.7), inset 0 0 25px rgba(245, 158, 11, 0.2);
+      position: relative;
+      touch-action: manipulation;
+    }
+
+    .tap-orb:active { transform: scale(0.92); }
+    .tap-orb-icon { font-size: 2rem; margin-bottom: 2px; }
+    .tap-orb-text { font-size: 0.85rem; font-weight: 800; color: var(--gold); }
+
+    .click-particle {
+      position: absolute;
+      color: var(--gold);
+      font-weight: 800;
+      font-size: 1.2rem;
+      pointer-events: none;
+      animation: floatUpParticle 0.75s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+      z-index: 100;
+      text-shadow: 0 0 12px rgba(245, 158, 11, 0.7);
+    }
+
+    @keyframes floatUpParticle {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--dx), -70px) scale(1.3); }
+    }
+
+    /* Folders */
+    .folder-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .folder-header {
+      padding: 13px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      background: rgba(255,255,255,0.02);
+      user-select: none;
+    }
+
+    .folder-header:hover { background: rgba(255,255,255,0.05); }
+
+    .folder-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .folder-arrow {
+      font-size: 0.8rem;
+      color: var(--text-light);
+      transition: transform 0.2s ease;
+    }
+
+    .folder-card.open .folder-arrow {
+      transform: rotate(180deg);
+      color: var(--gold);
+    }
+
+    .folder-content {
+      display: none;
+      padding: 8px 10px 10px;
+      border-top: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .folder-card.open .folder-content { display: block; }
+
+    /* Product Cards */
+    .glass-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      backdrop-filter: blur(15px);
+    }
+
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      min-width: 0;
+      cursor: pointer;
+    }
+
+    .card-media-wrap {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: #0f172a;
+    }
+
+    .card-media-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .card-titles {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .card-titles h4 {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .count-pill {
+      font-size: 0.65rem;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 1px 6px;
+      border-radius: 5px;
+      color: var(--text-light);
+      flex-shrink: 0;
+    }
+
+    .card-titles p {
+      font-size: 0.72rem;
+      color: var(--emerald);
+      font-weight: 600;
+      margin-top: 2px;
+    }
+
+    /* Buttons */
+    .btn-action {
+      background: var(--gold-gradient);
+      color: #000;
+      border: none;
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.72rem;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1px;
+      min-width: 76px;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.25);
+      flex-shrink: 0;
+      transition: transform 0.1s ease, opacity 0.15s ease;
+    }
+
+    .btn-action:active { transform: scale(0.94); }
+
+    .btn-action.locked {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    .btn-action span.cost {
+      font-size: 0.62rem;
+      font-weight: 600;
+      opacity: 0.9;
+    }
+
+    .btn-pink {
+      background: linear-gradient(145deg, #ec4899, #be185d);
+      box-shadow: 0 4px 12px rgba(236, 72, 153, 0.3);
+      color: white;
+    }
+
+    .btn-sell {
+      background: var(--rose);
+      color: white;
+      margin-left: 4px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .section-label {
+      font-size: 0.74rem;
+      font-weight: 800;
+      color: var(--gold);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      margin: 16px 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Bottom Navigation */
+    .bottom-bar {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 70px;
+      background: rgba(10, 14, 24, 0.96);
+      backdrop-filter: blur(30px);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 0 4px;
+      z-index: 30;
+    }
+
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.68rem;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 6px 0;
+    }
+
+    .nav-btn .icon { font-size: 1.3rem; }
+    .nav-btn.active { color: var(--gold); font-weight: 800; }
+  </style>
+</head>
+<body>
+
+  <div class="toast" id="toast-box">
+    <span>🏆</span>
+    <span id="toast-msg">Operation Complete!</span>
+  </div>
+
+  <div class="modal-overlay" id="inspectModal" onclick="closeModal(event)">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <img id="modalImg" class="modal-img" src="" alt="Vehicle Inspect">
+      <div class="modal-body">
+        <h3 id="modalTitle" class="modal-title">Product Name</h3>
+        <p id="modalDesc" class="modal-desc">High performance luxury specifications.</p>
+        <div class="modal-specs">
+          <div class="spec-box">
+            <div class="spec-label">Top Speed / Range</div>
+            <div id="modalSpec1" class="spec-value">320 km/h</div>
+          </div>
+          <div class="spec-box">
+            <div class="spec-label">Power Output</div>
+            <div id="modalSpec2" class="spec-value">650 BHP</div>
+          </div>
+        </div>
+        <button class="btn-close" onclick="closeModal()">Close Preview</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-frame">
+    <div class="header">
+      <div class="level-badge" id="player-tier">🇮🇳 Sovereign Hegemon of India</div>
+      <div class="networth-title">Total Liquid Capital</div>
+      <div class="balance-display" id="balance">₹0</div>
+      <div class="status-row">
+        <div class="income-pill">
+          <span>▲</span>
+          <span id="passive-rate">+₹0 / sec</span>
+        </div>
+        <div class="buff-pill" id="buff-indicator">
+          <span>🔥</span>
+          <span id="buff-text">2x (20s)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="content-area">
+
+      <div id="tab-empire" class="tab-content active">
+        <div class="tap-zone">
+          <button class="tap-orb" id="tapButton" onclick="tapAction(event)">
+            <div class="tap-orb-icon">👑</div>
+            <div class="tap-orb-text">+<span id="click-val">₹1,000</span></div>
+          </button>
+        </div>
+
+        <div class="section-label">📁 Corporate Portfolios (Tap to Expand)</div>
+
+        <div class="folder-card open" id="folder-bike">
+          <div class="folder-header" onclick="toggleFolder('folder-bike')">
+            <span class="folder-title">🏍️ Indian Two-Wheeler Plants (10 Companies)</span>
+            <span class="folder-arrow">▼</span>
+          </div>
+          <div class="folder-content" id="bike-container"></div>
+        </div>
+
+        <div class="folder-card" id="folder-car">
+          <div class="folder-header" onclick="toggleFolder('folder-car')">
+            <span class="folder-title">🚗 Automotive Gigafactories (10 Companies)</span>
+            <span class="folder-arrow">▼</span>
+          </div>
+          <div class="folder-content" id="car-container"></div>
+        </div>
+
+        <div class="folder-card" id="folder-bus">
+          <div class="folder-header" onclick="toggleFolder('folder-bus')">
+            <span class="folder-title">🚌 Intercity Transit Fleets (10 Companies)</span>
+            <span class="folder-arrow">▼</span>
+          </div>
+          <div class="folder-content" id="bus-container"></div>
+        </div>
+
+        <div class="folder-card" id="folder-food">
+          <div class="folder-header" onclick="toggleFolder('folder-food')">
+            <span class="folder-title">🍛 FMCG & Luxury Hotels (10 Companies)</span>
+            <span class="folder-arrow">▼</span>
+          </div>
+          <div class="folder-content" id="food-container"></div>
+        </div>
+
+        <div class="folder-card" id="folder-mall">
+          <div class="folder-header" onclick="toggleFolder('folder-mall')">
+            <span class="folder-title">🏬 Super Regional Malls (10 Companies)</span>
+            <span class="folder-arrow">▼</span>
+          </div>
+          <div class="folder-content" id="mall-container"></div>
+        </div>
+
+        <div class="folder-card" id="folder-airline">
+          <div class="folder-header" onclick="toggleFolder('folder-airline')">
+            <span class="folder-title">✈️ Sky Fleets & Aviation (10 Companies)</span>
+            <span class="folder-arrow">▼</span>
+          </div>
+          <div class="folder-content" id="airline-container"></div>
+        </div>
+      </div>
+
+      <div id="tab-vehicles" class="tab-content">
+        <div class="section-label">🏍️ Buy Indian Bikes & Superbikes (10 Branded Models)</div>
+        <div id="hangar-bikes"></div>
+
+        <div class="section-label">🚗 Buy Luxury SUVs & Supercars (10 Branded Models)</div>
+        <div id="hangar-cars"></div>
+
+        <div class="section-label">✈️ Buy Business Jets & Sky Flagships (10 Aircraft)</div>
+        <div id="hangar-planes"></div>
+
+        <div class="section-label">🚁 Buy VIP Charter Helicopters (10 Choppers)</div>
+        <div id="hangar-copters"></div>
+      </div>
+
+      <div id="tab-commitments" class="tab-content">
+        <div class="section-label">👸 Girlfriend & Dating Commitments</div>
+        <div id="gf-container"></div>
+
+        <div class="section-label">💍 Wife & Matrimonial Royalties</div>
+        <div id="wife-container"></div>
+
+        <div class="section-label">🏡 Parents, Family & Heritage Milestones</div>
+        <div id="family-container"></div>
+      </div>
+
+      <div id="tab-stocks" class="tab-content">
+        <div class="section-label">🇮🇳 Dalal Street (10 Top Indian Bluechips)</div>
+        <div id="india-stocks-container"></div>
+
+        <div class="section-label">🇺🇸 Wall Street (8 US Big Tech Giants)</div>
+        <div id="us-stocks-container"></div>
+
+        <div class="section-label">🌍 World Titans (6 Global Powerhouses)</div>
+        <div id="world-stocks-container"></div>
+
+        <div class="section-label">⚡ Corporate Licenses & Perks</div>
+        <div id="upgrades-container"></div>
+      </div>
+
+    </div>
+
+    <div class="bottom-bar">
+      <button class="nav-btn active" onclick="switchTab('empire', this)">
+        <span class="icon">🏢</span>
+        <span>Companies</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('vehicles', this)">
+        <span class="icon">🏎️</span>
+        <span>Fleet Gallery</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('commitments', this)">
+        <span class="icon">💖</span>
+        <span>Family</span>
+      </button>
+      <button class="nav-btn" onclick="switchTab('stocks', this)">
+        <span class="icon">📈</span>
+        <span>World Stocks</span>
+      </button>
+    </div>
+  </div>
+
+  <script>
+    // State Initialization
+    let balance = 500000;
+    let clickVal = 1000;
+    let multiplier = 1;
+    let buffTimer = 0;
+
+    const getLogo = (name, bg, fg) => `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=${bg}&color=${fg}&bold=true&length=3&font-size=0.4`;
+
+    // 10 Bike Companies
+    const bikeBiz = [
+      { id: 'bk1', logo: 'https://unavatar.io/heromotocorp.com', name: 'Hero MotoCorp Assembly', cost: 12000, income: 350, count: 0 },
+      { id: 'bk2', logo: 'https://unavatar.io/bajajauto.com', name: 'Bajaj Auto Pulsar Line', cost: 35000, income: 950, count: 0 },
+      { id: 'bk3', logo: 'https://unavatar.io/tvsmotor.com', name: 'TVS Motor Apache Plant', cost: 95000, income: 2600, count: 0 },
+      { id: 'bk4', logo: 'https://unavatar.io/royalenfield.com', name: 'Royal Enfield Foundry', cost: 250000, income: 6800, count: 0 },
+      { id: 'bk5', logo: 'https://unavatar.io/olaelectric.com', name: 'Ola Electric Gigafactory', cost: 700000, income: 19000, count: 0 },
+      { id: 'bk6', logo: 'https://unavatar.io/atherenergy.com', name: 'Ather Energy Smart Hub', cost: 1800000, income: 48000, count: 0 },
+      { id: 'bk7', logo: 'https://unavatar.io/honda2wheelersindia.com', name: 'Honda Motorcycle India', cost: 4500000, income: 120000, count: 0 },
+      { id: 'bk8', logo: 'https://unavatar.io/yamaha-motor-india.com', name: 'Yamaha India Hub', cost: 11000000, income: 290000, count: 0 },
+      { id: 'bk9', logo: 'https://unavatar.io/revoltmotors.com', name: 'Revolt Motors AI Bikes', cost: 26000000, income: 680000, count: 0 },
+      { id: 'bk10', logo: 'https://unavatar.io/ultraviolette.com', name: 'Ultraviolette Superbikes', cost: 65000000, income: 1700000, count: 0 }
+    ];
+
+    // 10 Car Companies
+    const carBiz = [
+      { id: 'cr1', logo: 'https://unavatar.io/marutisuzuki.com', name: 'Maruti Suzuki Line', cost: 500000, income: 14000, count: 0 },
+      { id: 'cr2', logo: 'https://unavatar.io/tatamotors.com', name: 'Tata Motors EV Division', cost: 1400000, income: 38000, count: 0 },
+      { id: 'cr3', logo: 'https://unavatar.io/mahindra.com', name: 'Mahindra SUV Forge', cost: 3800000, income: 105000, count: 0 },
+      { id: 'cr4', logo: 'https://unavatar.io/hyundai.com', name: 'Hyundai Motor India', cost: 9500000, income: 260000, count: 0 },
+      { id: 'cr5', logo: 'https://unavatar.io/kia.com', name: 'Kia Motors Anantapur', cost: 24000000, income: 650000, count: 0 },
+      { id: 'cr6', logo: 'https://unavatar.io/toyotabharat.com', name: 'Toyota Kirloskar Auto', cost: 60000000, income: 1600000, count: 0 },
+      { id: 'cr7', logo: 'https://unavatar.io/skoda-auto.co.in', name: 'Skoda Volkswagen India', cost: 150000000, income: 4000000, count: 0 },
+      { id: 'cr8', logo: 'https://unavatar.io/mgmotor.co.in', name: 'MG Motor India', cost: 380000000, income: 10000000, count: 0 },
+      { id: 'cr9', logo: 'https://unavatar.io/jaguarlandrover.com', name: 'JLR Luxury Gigafactory', cost: 950000000, income: 25000000, count: 0 },
+      { id: 'cr10', logo: 'https://unavatar.io/forcemotors.com', name: 'Force Motors Trax Plant', cost: 2400000000, income: 62000000, count: 0 }
+    ];
+
+    // 10 Bus Companies
+    const busBiz = [
+      { id: 'bs1', logo: 'https://unavatar.io/ashokleyland.com', name: 'Ashok Leyland Shuttle', cost: 800000, income: 22000, count: 0 },
+      { id: 'bs2', logo: 'https://unavatar.io/eicher.in', name: 'Eicher Skyline City Fleet', cost: 2200000, income: 60000, count: 0 },
+      { id: 'bs3', logo: 'https://unavatar.io/forcemotors.com', name: 'Force Traveler Fleet', cost: 5800000, income: 160000, count: 0 },
+      { id: 'bs4', logo: 'https://unavatar.io/olectra.com', name: 'Olectra Greentech EV', cost: 15000000, income: 410000, count: 0 },
+      { id: 'bs5', logo: 'https://unavatar.io/jbmgroup.com', name: 'JBM Auto Electric Buses', cost: 38000000, income: 1050000, count: 0 },
+      { id: 'bs6', logo: 'https://unavatar.io/vrlgroup.in', name: 'VRL Logistics Sleeper', cost: 95000000, income: 2600000, count: 0 },
+      { id: 'bs7', logo: 'https://unavatar.io/srstravels.net', name: 'SRS Travels Interstate', cost: 240000000, income: 6500000, count: 0 },
+      { id: 'bs8', logo: 'https://unavatar.io/kpntravels.in', name: 'KPN Express Transit', cost: 600000000, income: 16000000, count: 0 },
+      { id: 'bs9', logo: 'https://unavatar.io/chalo.com', name: 'Chalo App Mobility Fleet', cost: 1500000000, income: 40000000, count: 0 },
+      { id: 'bs10', logo: 'https://unavatar.io/tatamotors.com', name: 'Tata Starbus EV Fleet', cost: 3800000000, income: 100000000, count: 0 }
+    ];
+
+    // 10 Food Brands
+    const foodBiz = [
+      { id: 'f1', logo: 'https://unavatar.io/chaipoint.com', name: 'Chai Point Express', cost: 5000, income: 140, count: 0 },
+      { id: 'f2', logo: 'https://unavatar.io/chaayos.com', name: 'Chaayos Cafes Network', cost: 18000, income: 480, count: 0 },
+      { id: 'f3', logo: 'https://unavatar.io/haldirams.com', name: 'Haldiram\'s Sweets Hub', cost: 65000, income: 1800, count: 0 },
+      { id: 'f4', logo: 'https://unavatar.io/bikanervala.com', name: 'Bikanervala Network', cost: 220000, income: 6000, count: 0 },
+      { id: 'f5', logo: 'https://unavatar.io/cafecoffeeday.com', name: 'CCD Heritage Spire', cost: 750000, income: 20000, count: 0 },
+      { id: 'f6', logo: 'https://unavatar.io/amul.com', name: 'Amul Dairy Cooperative', cost: 2500000, income: 68000, count: 0 },
+      { id: 'f7', logo: 'https://unavatar.io/britannia.co.in', name: 'Britannia FMCG Plant', cost: 8000000, income: 220000, count: 0 },
+      { id: 'f8', logo: 'https://unavatar.io/itchotels.com', name: 'ITC Hotels Luxury Resort', cost: 26000000, income: 700000, count: 0 },
+      { id: 'f9', logo: 'https://unavatar.io/tajhotels.com', name: 'Taj Hotels Palace Resorts', cost: 85000000, income: 2300000, count: 0 },
+      { id: 'f10', logo: 'https://unavatar.io/adaniwilmar.com', name: 'Adani Wilmar Fortune Agro', cost: 280000000, income: 7500000, count: 0 }
+    ];
+
+    // 10 Malls
+    const mallBiz = [
+      { id: 'm1', logo: 'https://unavatar.io/dmartindia.com', name: 'DMart Supercenter', cost: 250000, income: 7000, count: 0 },
+      { id: 'm2', logo: 'https://unavatar.io/relianceretail.com', name: 'Smart Bazaar Hypermarket', cost: 850000, income: 23000, count: 0 },
+      { id: 'm3', logo: 'https://unavatar.io/shoppersstop.com', name: 'Shoppers Stop Plaza', cost: 2800000, income: 75000, count: 0 },
+      { id: 'm4', logo: 'https://unavatar.io/pantaloons.com', name: 'Pantaloons Stores', cost: 9000000, income: 240000, count: 0 },
+      { id: 'm5', logo: 'https://unavatar.io/phoenixmarketcity.com', name: 'Phoenix Marketcity Mall', cost: 28000000, income: 750000, count: 0 },
+      { id: 'm6', logo: 'https://unavatar.io/lulumall.in', name: 'Lulu Mall Megastructure', cost: 90000000, income: 2400000, count: 0 },
+      { id: 'm7', logo: 'https://unavatar.io/dlfmallofindia.com', name: 'DLF Mall of India', cost: 280000000, income: 7500000, count: 0 },
+      { id: 'm8', logo: 'https://unavatar.io/jioworldplaza.com', name: 'Jio World Plaza Luxury', cost: 900000000, income: 24000000, count: 0 },
+      { id: 'm9', logo: 'https://unavatar.io/selectcitywalk.com', name: 'Select CITYWALK Delhi', cost: 2800000000, income: 75000000, count: 0 },
+      { id: 'm10', logo: 'https://unavatar.io/relianceindustries.com', name: 'Reliance Retail Group', cost: 9000000000, income: 240000000, count: 0 }
+    ];
+
+    // 10 Airlines
+    const airlineBiz = [
+      { id: 'a1', logo: 'https://unavatar.io/fly91.in', name: 'Fly91 Regional Connect', cost: 4000000, income: 110000, count: 0 },
+      { id: 'a2', logo: 'https://unavatar.io/starair.in', name: 'Star Air Regional', cost: 12000000, income: 320000, count: 0 },
+      { id: 'a3', logo: 'https://unavatar.io/allianceair.in', name: 'Alliance Air Lifeline', cost: 38000000, income: 1000000, count: 0 },
+      { id: 'a4', logo: 'https://unavatar.io/spicejet.com', name: 'SpiceJet Cargo Fleet', cost: 120000000, income: 320000, count: 0 },
+      { id: 'a5', logo: 'https://unavatar.io/akasaair.com', name: 'Akasa Air Fleet', cost: 380000000, income: 10000000, count: 0 },
+      { id: 'a6', logo: 'https://unavatar.io/airindiaexpress.com', name: 'Air India Express Gulf', cost: 1200000000, income: 32000000, count: 0 },
+      { id: 'a7', logo: 'https://unavatar.io/goindigo.in', name: 'IndiGo A321neo Armada', cost: 3800000000, income: 100000000, count: 0 },
+      { id: 'a8', logo: 'https://unavatar.io/airindia.com', name: 'Air India Transoceanic', cost: 12000000000, income: 320000000, count: 0 },
+      { id: 'a9', logo: 'https://unavatar.io/cluboneair.com', name: 'Club One Air VIP Jets', cost: 38000000000, income: 1000000000, count: 0 },
+      { id: 'a10', logo: 'https://unavatar.io/isro.gov.in', name: 'ISRO Commercial Rockets', cost: 120000000000, income: 3200000000, count: 0 }
+    ];
+
+    // 10 Fleet Bikes
+    const garageBikes = [
+      { id: 'gb1', img: 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=600&q=80', name: 'Hero Splendor+ XTEC', cost: 85000, income: 90, count: 0, desc: 'India\'s most popular commuter.', spec1: '95 km/h', spec2: '8.02 PS' },
+      { id: 'gb2', img: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=600&q=80', name: 'Bajaj Pulsar NS200', cost: 145000, income: 160, count: 0, desc: 'Aggressive streetfighter with triple-spark DTS-i tech.', spec1: '136 km/h', spec2: '24.5 PS' },
+      { id: 'gb3', img: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=600&q=80', name: 'TVS Apache RTR 310', cost: 245000, income: 280, count: 0, desc: 'Freestyle performance racing machine.', spec1: '150 km/h', spec2: '35.6 PS' },
+      { id: 'gb4', img: 'https://images.unsplash.com/photo-1558980664-769d59546b3d?auto=format&fit=crop&w=600&q=80', name: 'Royal Enfield Classic 350', cost: 220000, income: 260, count: 0, desc: 'Timeless retro thumper cruiser.', spec1: '120 km/h', spec2: '20.2 BHP' },
+      { id: 'gb5', img: 'https://images.unsplash.com/photo-1609630875171-b1321377ee65?auto=format&fit=crop&w=600&q=80', name: 'Continental GT 650 Chrome', cost: 380000, income: 480, count: 0, desc: 'Twin-cylinder cafe racer built for highway cruising.', spec1: '170 km/h', spec2: '47 BHP' },
+      { id: 'gb6', img: 'https://images.unsplash.com/photo-1568772585472-7a71878d655f?auto=format&fit=crop&w=600&q=80', name: 'KTM 390 Duke', cost: 310000, income: 390, count: 0, desc: 'The Corner Rocket with cornering ABS.', spec1: '167 km/h', spec2: '45.3 PS' },
+      { id: 'gb7', img: 'https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&w=600&q=80', name: 'Ather 450X Gen 4', cost: 160000, income: 190, count: 0, desc: 'Warp mode smart electric scooter.', spec1: '90 km/h', spec2: '6.4 kW' },
+      { id: 'gb8', img: 'https://images.unsplash.com/photo-1599819811279-d5ad9cccf838?auto=format&fit=crop&w=600&q=80', name: 'Ultraviolette F77 Mach 2', cost: 550000, income: 750, count: 0, desc: 'Aviation-inspired electric superbike with supersonic torque.', spec1: '155 km/h', spec2: '40.5 BHP' },
+      { id: 'gb9', img: 'https://images.unsplash.com/photo-1568772585472-7a71878d655f?auto=format&fit=crop&w=600&q=80', name: 'Ducati Panigale V4 S', cost: 3400000, income: 5200, count: 0, desc: 'Desmosedici Stradale track dominator.', spec1: '305 km/h', spec2: '215.5 BHP' },
+      { id: 'gb10', img: 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=600&q=80', name: 'Kawasaki Ninja H2 Carbon', cost: 4200000, income: 6800, count: 0, desc: 'Supercharged carbon fiber hypersport legend.', spec1: '380 km/h', spec2: '231 BHP' }
+    ];
+
+    // 10 Fleet Cars
+    const garageCars = [
+      { id: 'gc1', img: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80', name: 'Maruti Suzuki Swift ZXi+', cost: 950000, income: 1100, count: 0, desc: 'India\'s sportiest compact daily hatchback.', spec1: '165 km/h', spec2: '82 PS' },
+      { id: 'gc2', img: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80', name: 'Tata Nexon EV Empowered', cost: 1750000, income: 2100, count: 0, desc: 'India\'s best-selling electric 5-star SUV.', spec1: '150 km/h', spec2: '143 PS' },
+      { id: 'gc3', img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80', name: 'Mahindra Thar Roxx 4x4', cost: 1800000, income: 2400, count: 0, desc: 'Rugged 4x4 off-roader with luxury panoramic roof.', spec1: '160 km/h', spec2: '175 BHP' },
+      { id: 'gc4', img: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=600&q=80', name: 'Mahindra Scorpio-N 4Xplor', cost: 2400000, income: 3400, count: 0, desc: 'The modern D-segment Indian powerhouse SUV.', spec1: '180 km/h', spec2: '200 BHP' },
+      { id: 'gc5', img: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?auto=format&fit=crop&w=600&q=80', name: 'Tata Harrier Stealth Dark', cost: 2800000, income: 4200, count: 0, desc: 'Land Rover D8 platform engineered flagship SUV.', spec1: '190 km/h', spec2: '170 BHP' },
+      { id: 'gc6', img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&w=600&q=80', name: 'Toyota Fortuner Legender 4x4', cost: 4800000, income: 7200, count: 0, desc: 'Unbeatable status symbol luxury SUV.', spec1: '190 km/h', spec2: '204 PS' },
+      { id: 'gc7', img: 'https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&w=600&q=80', name: 'BMW M4 Competition Coupé', cost: 16000000, income: 28000, count: 0, desc: 'M TwinPower Turbo 6-cylinder performance coupe.', spec1: '290 km/h', spec2: '510 BHP' },
+      { id: 'gc8', img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80', name: 'Porsche 911 GT3 RS', cost: 38000000, income: 68000, count: 0, desc: 'Naturally aspirated aerodynamic circuit weapon.', spec1: '296 km/h', spec2: '525 PS' },
+      { id: 'gc9', img: 'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?auto=format&fit=crop&w=600&q=80', name: 'Lamborghini Huracán Tecnica', cost: 45000000, income: 82000, count: 0, desc: 'V10 naturally aspirated Italian roar.', spec1: '325 km/h', spec2: '640 PS' },
+      { id: 'gc10', img: 'https://images.unsplash.com/photo-1631295868223-63265b40d9e4?auto=format&fit=crop&w=600&q=80', name: 'Rolls-Royce Phantom VIII', cost: 110000000, income: 220000, count: 0, desc: 'The worldwide benchmark of bespoke automotive luxury.', spec1: '250 km/h', spec2: '563 BHP' }
+    ];
+
+    // 10 Fleet Aircraft
+    const garagePlanes = [
+      { id: 'gp1', img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', name: 'Cessna 172 Skyhawk Club', cost: 18000000, income: 32000, count: 0, desc: 'Proven single-engine general aviation trainer.', spec1: '226 km/h', spec2: '180 HP' },
+      { id: 'gp2', img: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=600&q=80', name: 'Beechcraft King Air 360', cost: 35000000, income: 65000, count: 0, desc: 'Twin-engine executive business turboprop.', spec1: '578 km/h', spec2: '1700 SHP' },
+      { id: 'gp3', img: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=600&q=80', name: 'Pilatus PC-12 NGX Turboprop', cost: 52000000, income: 95000, count: 0, desc: 'Versatile executive turboprop capable of unpaved runways.', spec1: '528 km/h', spec2: '1200 SHP' },
+      { id: 'gp4', img: 'https://images.unsplash.com/photo-1519074069444-1ba4fff16def?auto=format&fit=crop&w=600&q=80', name: 'Embraer Praetor 600', cost: 190000000, income: 380000, count: 0, desc: 'Super-midsize business jet with transatlantic non-stop range.', spec1: '863 km/h', spec2: '7,441 km Range' },
+      { id: 'gp5', img: 'https://images.unsplash.com/photo-1583071299210-c6c113f4cb91?auto=format&fit=crop&w=600&q=80', name: 'Dassault Falcon 8X Trijet', cost: 420000000, income: 850000, count: 0, desc: 'Ultra-long range French trijet airliner.', spec1: '953 km/h', spec2: '11,945 km Range' },
+      { id: 'gp6', img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', name: 'Bombardier Global 7500', cost: 580000000, income: 1200000, count: 0, desc: 'Four distinct living spaces and maximum range.', spec1: 'Mach 0.925', spec2: '14,260 km Range' },
+      { id: 'gp7', img: 'https://images.unsplash.com/photo-1583071299210-c6c113f4cb91?auto=format&fit=crop&w=600&q=80', name: 'Gulfstream G700 Flagship', cost: 680000000, income: 1500000, count: 0, desc: 'The most spacious and advanced cabin in business aviation.', spec1: 'Mach 0.925', spec2: '13,890 km Range' },
+      { id: 'gp8', img: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?auto=format&fit=crop&w=600&q=80', name: 'Airbus A321neo Commercial', cost: 95000000, income: 2100000, count: 0, desc: 'Single-aisle flagship commercial passenger jet.', spec1: '876 km/h', spec2: '244 Seats' },
+      { id: 'gp9', img: 'https://images.unsplash.com/photo-1519074069444-1ba4fff16def?auto=format&fit=crop&w=600&q=80', name: 'Boeing 787-9 Dreamliner', cost: 2200000000, income: 5200000, count: 0, desc: 'Composite super-efficient wide-body global airliner.', spec1: '903 km/h', spec2: '296 Seats' },
+      { id: 'gp10', img: 'https://images.unsplash.com/photo-1583071299210-c6c113f4cb91?auto=format&fit=crop&w=600&q=80', name: 'Boeing Business Jet 747-8 VIP', cost: 4500000000, income: 12000000, count: 0, desc: 'Queen of the Skies customized as a flying palace.', spec1: '988 km/h', spec2: 'Palace Suite' }
+    ];
+
+    // 10 Fleet Helicopters
+    const garageCopters = [
+      { id: 'gh1', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80', name: 'Robinson R44 Raven II', cost: 8500000, income: 15000, count: 0, desc: 'Light 4-place piston helicopter.', spec1: '240 km/h', spec2: '245 HP' },
+      { id: 'gh2', img: 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?auto=format&fit=crop&w=600&q=80', name: 'Bell 206L-4 LongRanger', cost: 22000000, income: 42000, count: 0, desc: 'Legendary 7-seat corporate turbine transport.', spec1: '246 km/h', spec2: '725 SHP' },
+      { id: 'gh3', img: 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?auto=format&fit=crop&w=600&q=80', name: 'Bell 407 GXi VIP Chopper', cost: 38000000, income: 72000, count: 0, desc: 'Executive luxury turbine chopper with Garmin G1000H avionics.', spec1: '260 km/h', spec2: '813 SHP' },
+      { id: 'gh4', img: 'https://images.unsplash.com/photo-1520637645167-27063a8e945c?auto=format&fit=crop&w=600&q=80', name: 'Eurocopter EC130 T2', cost: 48000000, income: 95000, count: 0, desc: 'Fenestron shrouded tail-rotor quiet executive flyer.', spec1: '237 km/h', spec2: '952 SHP' },
+      { id: 'gh5', img: 'https://images.unsplash.com/photo-1520637645167-27063a8e945c?auto=format&fit=crop&w=600&q=80', name: 'Airbus H135 Helionix', cost: 68000000, income: 135000, count: 0, desc: 'Light twin-engine multi-mission VIP helicopter.', spec1: '254 km/h', spec2: '1334 SHP' },
+      { id: 'gh6', img: 'https://images.unsplash.com/photo-1520637645167-27063a8e945c?auto=format&fit=crop&w=600&q=80', name: 'Airbus H145 Twin Turbine', cost: 95000000, income: 190000, count: 0, desc: 'Twin-engine Helionix corporate executive transport.', spec1: '268 km/h', spec2: '890 SHP' },
+      { id: 'gh7', img: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80', name: 'Leonardo AW139 VIP', cost: 160000000, income: 340000, count: 0, desc: 'Leading intermediate twin engine helicopter for corporate VIPs.', spec1: '310 km/h', spec2: '1679 SHP' },
+      { id: 'gh8', img: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80', name: 'Sikorsky S-76D Executive', cost: 185000000, income: 410000, count: 0, desc: 'Preferred choice of royalty and world leaders.', spec1: '287 km/h', spec2: '2100 SHP' },
+      { id: 'gh9', img: 'https://images.unsplash.com/photo-1506157786151-b8491531f063?auto=format&fit=crop&w=600&q=80', name: 'Sikorsky S-92 VVIP Presidential', cost: 280000000, income: 620000, count: 0, desc: 'State-of-the-art multi-mission Head of State heavy helicopter.', spec1: '306 km/h', spec2: '5040 SHP' },
+      { id: 'gh10', img: 'https://images.unsplash.com/photo-1508614589041-895b88991e3e?auto=format&fit=crop&w=600&q=80', name: 'Boeing CH-47 VIP Chinook', cost: 550000000, income: 1300000, count: 0, desc: 'Tandem-rotor ultra-heavy VIP transport aircraft.', spec1: '315 km/h', spec2: '9466 SHP' }
+    ];
+
+    // Stocks
+    const indiaStocks = [
+      { id: 'in1', logo: 'https://unavatar.io/relianceindustries.com', name: 'Reliance Industries (RELIANCE)', price: 2950, owned: 0 },
+      { id: 'in2', logo: 'https://unavatar.io/tcs.com', name: 'Tata Consultancy Services (TCS)', price: 4200, owned: 0 },
+      { id: 'in3', logo: 'https://unavatar.io/hdfcbank.com', name: 'HDFC Bank Ltd (HDFCBANK)', price: 1650, owned: 0 },
+      { id: 'in4', logo: 'https://unavatar.io/infosys.com', name: 'Infosys Ltd (INFY)', price: 1850, owned: 0 },
+      { id: 'in5', logo: 'https://unavatar.io/tatamotors.com', name: 'Tata Motors (TATAMOTORS)', price: 980, owned: 0 },
+      { id: 'in6', logo: 'https://unavatar.io/icicibank.com', name: 'ICICI Bank Ltd (ICICIBANK)', price: 1220, owned: 0 },
+      { id: 'in7', logo: 'https://unavatar.io/sbi.co.in', name: 'State Bank of India (SBIN)', price: 820, owned: 0 },
+      { id: 'in8', logo: 'https://unavatar.io/itcportal.com', name: 'ITC Limited (ITC)', price: 490, owned: 0 },
+      { id: 'in9', logo: 'https://unavatar.io/larsentoubro.com', name: 'Larsen & Toubro (LT)', price: 3650, owned: 0 },
+      { id: 'in10', logo: 'https://unavatar.io/airtel.in', name: 'Bharti Airtel Ltd (BHARTIARTL)', price: 1540, owned: 0 }
+    ];
+
+    const usStocks = [
+      { id: 'us1', logo: 'https://unavatar.io/apple.com', name: 'Apple Inc. (AAPL)', price: 18500, owned: 0 },
+      { id: 'us2', logo: 'https://unavatar.io/microsoft.com', name: 'Microsoft Corp. (MSFT)', price: 34500, owned: 0 },
+      { id: 'us3', logo: 'https://unavatar.io/nvidia.com', name: 'Nvidia AI Titan (NVDA)', price: 95000, owned: 0 },
+      { id: 'us4', logo: 'https://unavatar.io/google.com', name: 'Alphabet Inc. (GOOGL)', price: 14500, owned: 0 },
+      { id: 'us5', logo: 'https://unavatar.io/amazon.com', name: 'Amazon.com (AMZN)', price: 15500, owned: 0 },
+      { id: 'us6', logo: 'https://unavatar.io/meta.com', name: 'Meta Platforms (META)', price: 42000, owned: 0 },
+      { id: 'us7', logo: 'https://unavatar.io/tesla.com', name: 'Tesla Motors (TSLA)', price: 21000, owned: 0 },
+      { id: 'us8', logo: getLogo('BRK', '1e3a8a', 'ffffff'), name: 'Berkshire Hathaway (BRK.A)', price: 5200000, owned: 0 }
+    ];
+
+    const worldStocks = [
+      { id: 'wd1', logo: 'https://unavatar.io/tsmc.com', name: 'TSMC Semiconductor (Taiwan)', price: 14500, owned: 0 },
+      { id: 'wd2', logo: 'https://unavatar.io/asml.com', name: 'ASML Lithography (Netherlands)', price: 72000, owned: 0 },
+      { id: 'wd3', logo: 'https://unavatar.io/samsung.com', name: 'Samsung Electronics (Korea)', price: 6200, owned: 0 },
+      { id: 'wd4', logo: 'https://unavatar.io/toyota.com', name: 'Toyota Motor Corp (Japan)', price: 2800, owned: 0 },
+      { id: 'wd5', logo: 'https://unavatar.io/lvmh.com', name: 'LVMH Moët Hennessy (France)', price: 65000, owned: 0 },
+      { id: 'wd6', logo: 'https://unavatar.io/aramco.com', name: 'Saudi Aramco Energy (KSA)', price: 2800, owned: 0 }
+    ];
+
+    // Commitments
+    const gfCommitments = [
+      { id: 'g1', img: 'https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=600&q=80', name: 'Louis Vuitton Handbag & Dinner', cost: 250000, mult: 2, dur: 20, desc: '2x Revenue (20s)' },
+      { id: 'g2', img: 'https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=600&q=80', name: 'Maldives Overwater Bungalow', cost: 3500000, mult: 2.8, dur: 30, desc: '2.8x Revenue (30s)' },
+      { id: 'g3', img: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=600&q=80', name: 'Custom Porsche 911 GT3 Gift', cost: 22000000, mult: 4, dur: 45, desc: '4x Revenue (45s)' }
+    ];
+
+    const wifeCommitments = [
+      { id: 'w1', img: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?auto=format&fit=crop&w=600&q=80', name: 'Tanishq Diamond Solitaire Set', cost: 2500000, mult: 2.5, dur: 30, desc: '2.5x Revenue (30s)' },
+      { id: 'w2', img: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=600&q=80', name: 'Udaipur Palace Anniversary Gala', cost: 35000000, mult: 4.5, dur: 45, desc: '4.5x Revenue (45s)' },
+      { id: 'w3', img: 'https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=600&q=80', name: 'Sea-Facing Villa in Worli, Mumbai', cost: 250000000, mult: 7, dur: 60, desc: '7x Revenue (60s)' }
+    ];
+
+    const familyCommitments = [
+      { id: 'fm1', img: 'https://images.unsplash.com/photo-1516849841032-87cbac4d88f7?auto=format&fit=crop&w=600&q=80', name: 'Chardham Helicopter Yatra', cost: 1200000, mult: 2.2, dur: 25, desc: '2.2x Revenue (25s)' },
+      { id: 'fm2', img: 'https://images.unsplash.com/photo-1500076656116-558758c991c1?auto=format&fit=crop&w=600&q=80', name: '100-Acre Mango Farmhouse Estate', cost: 120000000, mult: 5, dur: 50, desc: '5x Revenue (50s)' },
+      { id: 'fm3', img: 'https://images.unsplash.com/photo-1586773860418-d37222d8fce3?auto=format&fit=crop&w=600&q=80', name: 'Family Charitable Hospital Wing', cost: 800000000, mult: 9, dur: 80, desc: '9x Revenue (80s)' }
+    ];
+
+    const upgrades = [
+      { id: 'u1', logo: getLogo('UPI', '059669', 'ffffff'), name: 'UPI 2.0 Real-Time Auto Fast-Billing', cost: 50000, addClick: 1200, bought: false },
+      { id: 'u2', logo: 'https://unavatar.io/isro.gov.in', name: 'ISRO Navigation Satellite Fleet Tracker', cost: 600000, addClick: 18000, bought: false },
+      { id: 'u3', logo: getLogo('SEZ', '7c3aed', 'ffffff'), name: 'Global Diplomatic Monopoly Corridor Pass', cost: 7500000, addClick: 220000, bought: false }
+    ];
+
+    // Currency Formatter
+    function fmt(n) {
+      if (n >= 1e11) return '₹' + (n / 1e11).toFixed(2) + ' Kharab';
+      if (n >= 1e9) return '₹' + (n / 1e9).toFixed(2) + ' Arab';
+      if (n >= 1e7) return '₹' + (n / 1e7).toFixed(2) + ' Cr';
+      if (n >= 1e5) return '₹' + (n / 1e5).toFixed(2) + ' L';
+      if (n >= 1e3) return '₹' + (n / 1e3).toFixed(1) + ' K';
+      return '₹' + Math.floor(n).toLocaleString('en-IN');
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast-box');
+      document.getElementById('toast-msg').innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    window.toggleFolder = function(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.toggle('open');
+    };
+
+    window.openModal = function(listKey, idx) {
+      const map = { garageBikes, garageCars, garagePlanes, garageCopters };
+      const item = map[listKey] ? map[listKey][idx] : null;
+      if (!item) return;
+      document.getElementById('modalImg').src = item.img;
+      document.getElementById('modalTitle').innerText = item.name;
+      document.getElementById('modalDesc').innerText = item.desc || 'High performance luxury engineering.';
+      document.getElementById('modalSpec1').innerText = item.spec1 || 'Elite Tier';
+      document.getElementById('modalSpec2').innerText = item.spec2 || '+ ' + fmt(item.income) + '/s';
+      document.getElementById('inspectModal').classList.add('active');
+    };
+
+    window.closeModal = function() {
+      document.getElementById('inspectModal').classList.remove('active');
+    };
+
+    function calcPassive() {
+      let total = 0;
+      [...bikeBiz, ...carBiz, ...busBiz, ...foodBiz, ...mallBiz, ...airlineBiz, ...garageBikes, ...garageCars, ...garagePlanes, ...garageCopters].forEach(b => total += b.income * b.count);
+      return total * multiplier;
+    }
+
+    window.tapAction = function(e) {
+      const earned = clickVal * multiplier;
+      balance += earned;
+      
+      const p = document.createElement('div');
+      p.className = 'click-particle';
+      p.innerText = `+${fmt(earned)}`;
+      const dx = (Math.random() - 0.5) * 80;
+      p.style.setProperty('--dx', `${dx}px`);
+      const rect = e.currentTarget ? e.currentTarget.getBoundingClientRect() : { left: window.innerWidth/2, top: 300 };
+      p.style.left = `${(e.clientX || rect.left + 50) - 20}px`;
+      p.style.top = `${(e.clientY || rect.top) - 15}px`;
+      document.body.appendChild(p);
+      setTimeout(() => p.remove(), 750);
+
+      updateHeadersOnly();
+    };
+
+    window.buyBiz = function(listKey, idx) {
+      const map = { bikeBiz, carBiz, busBiz, foodBiz, mallBiz, airlineBiz, garageBikes, garageCars, garagePlanes, garageCopters };
+      const list = map[listKey];
+      if (!list) return;
+      const item = list[idx];
+      if (balance >= item.cost) {
+        balance -= item.cost;
+        item.count++;
+        item.cost = Math.floor(item.cost * 1.16);
+        showToast(`Acquired ${item.name}!`);
+        renderAll();
+      } else {
+        showToast(`Need ${fmt(item.cost - balance)} more!`);
+      }
+    };
+
+    window.buyStock = function(listKey, idx) {
+      const map = { indiaStocks, usStocks, worldStocks };
+      const list = map[listKey];
+      if (!list) return;
+      const s = list[idx];
+      if (balance >= s.price) {
+        balance -= s.price;
+        s.owned++;
+        renderAll();
+      } else {
+        showToast("Insufficient Balance for Share!");
+      }
+    };
+
+    window.sellStock = function(listKey, idx) {
+      const map = { indiaStocks, usStocks, worldStocks };
+      const list = map[listKey];
+      if (!list) return;
+      const s = list[idx];
+      if (s.owned > 0) {
+        balance += s.price;
+        s.owned--;
+        renderAll();
+      }
+    };
+
+    window.indulge = function(listKey, idx) {
+      const map = { gfCommitments, wifeCommitments, familyCommitments };
+      const list = map[listKey];
+      if (!list) return;
+      const item = list[idx];
+      if (balance >= item.cost) {
+        balance -= item.cost;
+        multiplier = item.mult;
+        buffTimer = item.dur;
+        showToast(`Active: ${item.desc}!`);
+        renderAll();
+      } else {
+        showToast("Cannot Afford This Commitment!");
+      }
+    };
+
+    window.buyUpgrade = function(idx) {
+      const u = upgrades[idx];
+      if (balance >= u.cost && !u.bought) {
+        balance -= u.cost;
+        u.bought = true;
+        clickVal += u.addClick;
+        showToast(`Unlocked: ${u.name}!`);
+        renderAll();
+      } else if (balance < u.cost) {
+        showToast("Cannot Afford This Upgrade!");
+      }
+    };
+
+    window.switchTab = function(tabId, btn) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      const activeTabEl = document.getElementById('tab-' + tabId);
+      if (activeTabEl) activeTabEl.classList.add('active');
+      if (btn) btn.classList.add('active');
+    };
+
+    function renderCompanyList(containerId, list, listKey) {
+      const c = document.getElementById(containerId);
+      if (!c) return;
+      c.innerHTML = '';
+      list.forEach((item, idx) => {
+        const canBuy = balance >= item.cost;
+        c.innerHTML += `
+          <div class="glass-card">
+            <div class="card-left">
+              <div class="card-media-wrap">
+                <img class="card-media-img" src="${item.logo}" alt="logo" onerror="this.src='${getLogo(item.name.substring(0,3), '0284c7', 'ffffff')}'">
+              </div>
+              <div class="card-titles">
+                <h4>${item.name} ${item.count ? `<span class="count-pill">x${item.count}</span>` : ''}</h4>
+                <p>+${fmt(item.income)} / sec</p>
+              </div>
+            </div>
+            <button class="btn-action ${canBuy ? '' : 'locked'}" onclick="buyBiz('${listKey}', ${idx})">
+              <span>BUY</span>
+              <span class="cost">${fmt(item.cost)}</span>
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    function renderVehicleList(containerId, list, listKey) {
+      const c = document.getElementById(containerId);
+      if (!c) return;
+      c.innerHTML = '';
+      list.forEach((item, idx) => {
+        const canBuy = balance >= item.cost;
+        c.innerHTML += `
+          <div class="glass-card">
+            <div class="card-left" onclick="openModal('${listKey}', ${idx})">
+              <div class="card-media-wrap" style="padding:0;">
+                <img class="card-media-img" src="${item.img}" alt="vehicle" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&w=400&q=80'">
+              </div>
+              <div class="card-titles">
+                <h4>${item.name} ${item.count ? `<span class="count-pill">x${item.count}</span>` : ''}</h4>
+                <p>+${fmt(item.income)} / sec</p>
+              </div>
+            </div>
+            <button class="btn-action ${canBuy ? '' : 'locked'}" onclick="buyBiz('${listKey}', ${idx})">
+              <span>BUY</span>
+              <span class="cost">${fmt(item.cost)}</span>
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    function renderStockList(containerId, list, listKey) {
+      const c = document.getElementById(containerId);
+      if (!c) return;
+      c.innerHTML = '';
+      list.forEach((s, idx) => {
+        const canBuy = balance >= s.price;
+        c.innerHTML += `
+          <div class="glass-card">
+            <div class="card-left">
+              <div class="card-media-wrap">
+                <img class="card-media-img" src="${s.logo}" alt="logo" onerror="this.src='${getLogo(s.name.substring(0,3), 'dc2626', 'ffffff')}'">
+              </div>
+              <div class="card-titles">
+                <h4>${s.name}</h4>
+                <p>Price: ${fmt(s.price)} | Held: ${s.owned}</p>
+              </div>
+            </div>
+            <div style="display:flex; flex-shrink:0;">
+              <button class="btn-action ${canBuy ? '' : 'locked'}" onclick="buyStock('${listKey}', ${idx})" style="min-width:56px;">BUY</button>
+              <button class="btn-sell" onclick="sellStock('${listKey}', ${idx})">SELL</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function renderSplurgeList(containerId, list, listKey) {
+      const c = document.getElementById(containerId);
+      if (!c) return;
+      c.innerHTML = '';
+      list.forEach((item, idx) => {
+        const canBuy = balance >= item.cost;
+        c.innerHTML += `
+          <div class="glass-card">
+            <div class="card-left">
+              <div class="card-media-wrap" style="padding:0;">
+                <img class="card-media-img" src="${item.img}" alt="photo" onerror="this.src='https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&w=400&q=80'">
+              </div>
+              <div class="card-titles">
+                <h4>${item.name}</h4>
+                <p style="color:var(--pink);">${item.desc}</p>
+              </div>
+            </div>
+            <button class="btn-action btn-pink ${canBuy ? '' : 'locked'}" onclick="indulge('${listKey}', ${idx})">
+              <span>COMMIT</span>
+              <span class="cost">${fmt(item.cost)}</span>
+            </button>
+          </div>
+        `;
+      });
+    }
+
+    function updateHeadersOnly() {
+      document.getElementById('balance').innerText = fmt(balance);
+      document.getElementById('passive-rate').innerText = `+${fmt(calcPassive())} / sec`;
+      document.getElementById('click-val').innerText = fmt(clickVal * multiplier);
+
+      const tierBadge = document.getElementById('player-tier');
+      if (balance >= 1e11) tierBadge.innerText = '👑 Bharat Maha-Tycoon';
+      else if (balance >= 1e9) tierBadge.innerText = '💎 Dalal Street Shark';
+      else if (balance >= 1e7) tierBadge.innerText = '🏛️ Sovereign Industrialist';
+      else tierBadge.innerText = '🇮🇳 Sovereign Hegemon of India';
+
+      const buffEl = document.getElementById('buff-indicator');
+      if (buffTimer > 0) {
+        buffEl.style.display = 'inline-flex';
+        document.getElementById('buff-text').innerText = `${multiplier}x (${buffTimer}s)`;
+      } else {
+        buffEl.style.display = 'none';
+      }
+    }
+
+    function renderAll() {
+      updateHeadersOnly();
+
+      // Folders
+      renderCompanyList('bike-container', bikeBiz, 'bikeBiz');
+      renderCompanyList('car-container', carBiz, 'carBiz');
+      renderCompanyList('bus-container', busBiz, 'busBiz');
+      renderCompanyList('food-container', foodBiz, 'foodBiz');
+      renderCompanyList('mall-container', mallBiz, 'mallBiz');
+      renderCompanyList('airline-container', airlineBiz, 'airlineBiz');
+
+      // 40 Fleet Vehicles
+      renderVehicleList('hangar-bikes', garageBikes, 'garageBikes');
+      renderVehicleList('hangar-cars', garageCars, 'garageCars');
+      renderVehicleList('hangar-planes', garagePlanes, 'garagePlanes');
+      renderVehicleList('hangar-copters', garageCopters, 'garageCopters');
+
+      // Global & Indian Stock Markets
+      renderStockList('india-stocks-container', indiaStocks, 'indiaStocks');
+      renderStockList('us-stocks-container', usStocks, 'usStocks');
+      renderStockList('world-stocks-container', worldStocks, 'worldStocks');
+
+      // Commitments
+      renderSplurgeList('gf-container', gfCommitments, 'gfCommitments');
+      renderSplurgeList('wife-container', wifeCommitments, 'wifeCommitments');
+      renderSplurgeList('family-container', familyCommitments, 'familyCommitments');
+
+      // Upgrades
+      const u = document.getElementById('upgrades-container');
+      if (u) {
+        u.innerHTML = '';
+        upgrades.forEach((item, idx) => {
+          const canBuy = balance >= item.cost && !item.bought;
+          u.innerHTML += `
+            <div class="glass-card">
+              <div class="card-left">
+                <div class="card-media-wrap">
+                  <img class="card-media-img" src="${item.logo}" alt="logo">
+                </div>
+                <div class="card-titles">
+                  <h4>${item.name}</h4>
+                  <p style="color:var(--gold);">+${fmt(item.addClick)} Tap Value</p>
+                </div>
+              </div>
+              <button class="btn-action ${item.bought ? 'locked' : (canBuy ? '' : 'locked')}" onclick="buyUpgrade(${idx})">
+                <span>${item.bought ? 'ACTIVE' : 'BUY'}</span>
+                <span class="cost">${item.bought ? 'OWNED' : fmt(item.cost)}</span>
+              </button>
+            </div>
+          `;
+        });
+      }
+
+      // Save Game
+      localStorage.setItem('desi_master_markets_save_v2', JSON.stringify({
+        balance, clickVal, bikeBiz, carBiz, busBiz, foodBiz, mallBiz, airlineBiz, garageBikes, garageCars, garagePlanes, garageCopters, indiaStocks, usStocks, worldStocks, upgrades
+      }));
+    }
+
+    // Load Game
+    const saved = localStorage.getItem('desi_master_markets_save_v2');
+    if (saved) {
+      try {
+        const d = JSON.parse(saved);
+        balance = d.balance ?? balance;
+        clickVal = d.clickVal ?? clickVal;
+        const loadCounts = (target, source) => {
+          if (source) source.forEach((b, i) => { if (target[i]) { target[i].count = b.count; target[i].cost = b.cost; } });
+        };
+        const loadStockCounts = (target, source) => {
+          if (source) source.forEach((s, i) => { if (target[i]) target[i].owned = s.owned; });
+        };
+        loadCounts(bikeBiz, d.bikeBiz);
+        loadCounts(carBiz, d.carBiz);
+        loadCounts(busBiz, d.busBiz);
+        loadCounts(foodBiz, d.foodBiz);
+        loadCounts(mallBiz, d.mallBiz);
+        loadCounts(airlineBiz, d.airlineBiz);
+        loadCounts(garageBikes, d.garageBikes);
+        loadCounts(garageCars, d.garageCars);
+        loadCounts(garagePlanes, d.garagePlanes);
+        loadCounts(garageCopters, d.garageCopters);
+        loadStockCounts(indiaStocks, d.indiaStocks);
+        loadStockCounts(usStocks, d.usStocks);
+        loadStockCounts(worldStocks, d.worldStocks);
+        if (d.upgrades) d.upgrades.forEach((u, i) => { if (upgrades[i]) upgrades[i].bought = u.bought; });
+      } catch(e) {}
+    }
+
+    // Passive loop (1s)
+    setInterval(() => {
+      balance += calcPassive();
+      if (buffTimer > 0) {
+        buffTimer--;
+        if (buffTimer === 0) multiplier = 1;
+      }
+      updateHeadersOnly();
+    }, 1000);
+
+    // Dynamic Stock Fluctuations (3s)
+    setInterval(() => {
+      const tick = (arr) => {
+        if (!arr) return;
+        arr.forEach(s => {
+          const delta = (Math.random() * 0.16) - 0.07;
+          s.price = Math.max(100, Math.floor(s.price * (1 + delta)));
+        });
+      };
+      tick(indiaStocks);
+      tick(usStocks);
+      tick(worldStocks);
+      renderAll();
+    }, 3000);
+
+    // Initial Execution
+    renderAll();
+  </script>
+</body>
+</html>
